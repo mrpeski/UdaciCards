@@ -1,5 +1,4 @@
-import {ADD_CARD, CREATE_DECK, DELETE_DECK } from './actions'
-
+import {ADD_CARD, CREATE_DECK, DELETE_DECK, ADD_DECKS } from './actions'
 
 let obj = {
     React: {
@@ -46,7 +45,9 @@ export function reducer(state=obj,action){
             delete state[action.title];
             return {
                 ...state
-            }            
+            }
+        case ADD_DECKS:
+            return {...state,...action.decks};
         default:
             return state
     }

@@ -1,55 +1,56 @@
 import { AsyncStorage } from 'react-native'
-import { getMetricMetaInfo, timeToString } from './helpers'
+import { Notifications, Permissions } from 'expo'
 
-export const CALENDAR_STORAGE_KEY = 'UdaciFitness:calendar'
+export const NOTIFICATION_KEY = 'UdaciCards:notification'
 
-function getRandomNumber (max) {
-  return Math.floor(Math.random() * max) + 0
+
+export function clearLocalNotification () {
+  return AsyncStorage.removeItem(NOTIFICATION_KEY)
+    .then(Notifications.cancelAllScheduledNotificationsAsync)
 }
 
-function setDummyData () {
-  const { run, bike, swim, sleep, eat } = getMetricMetaInfo()
-
-  let dummyData = {}
-  const timestamp = Date.now()
-
-  for (let i = -183; i < 0; i++) {
-    const time = timestamp + i * 24 * 60 * 60 * 1000
-    const strTime = timeToString(time)
-    dummyData[strTime] = getRandomNumber(3) % 2 === 0
-      ? {
-          run: getRandomNumber(run.max),
-          bike: getRandomNumber(bike.max),
-          swim: getRandomNumber(swim.max),
-          sleep: getRandomNumber(sleep.max),
-          eat: getRandomNumber(eat.max),
-        }
-      : null
-  }
-
-  AsyncStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(dummyData))
-
-  return dummyData
-}
-
-function setMissingDates (dates) {
-  const length = Object.keys(dates).length
-  const timestamp = Date.now()
-
-  for (let i = -183; i < 0; i++) {
-    const time = timestamp + i * 24 * 60 * 60 * 1000
-    const strTime = timeToString(time)
-
-    if (typeof dates[strTime] === 'undefined') {
-      dates[strTime] = null
+function createNotification () {
+  return {
+    title: 'Consider Studying',
+    body: "👋 don't forget to memorize some solutions today!",
+    ios: {
+      sound: true,
+    },
+    android: {
+      sound: true,
+      priority: 'high',
+      sticky: false,
+      vibrate: true,
     }
   }
-
-  return dates
 }
 
-export function formatCalendarResults (results) {
-  return results === null
-    ? setDummyData()
-    : setMissingDates(JSON.parse(results))
+export function setLocalNotification () {
+  AsyncStorage.getItem(NOTIFICATION_KEY)
+    .then(JSON.parse)
+    .then((data) => {
+      if (data === null) {
+        Permissions.askAsync(Permissions.NOTIFICATIONS)
+          .then(({ status }) => {
+            if (status === 'granted') {
+              Notifications.cancelAllScheduledNotificationsAsync()
+
+              let tomorrow = new Date()
+              tomorrow.setDate(tomorrow.getDate() + 1)
+              tomorrow.setHours(19)
+              tomorrow.setMinutes(0)
+
+              Notifications.scheduleLocalNotificationAsync(
+                createNotification(),
+                {
+                  time: tomorrow,
+                  repeat: 'day',
+                }
+              )
+
+              AsyncStorage.setItem(NOTIFICATION_KEY, JSON.stringify(true))
+            }
+          })
+      }
+    })
 }

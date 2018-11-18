@@ -1,9 +1,9 @@
 import React from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import { View, StyleSheet, Dimensions, KeyboardAvoidingView } from 'react-native'
 import { addCardToDeck } from '../utils/DB'
 import { addCard } from '../store/actions'
 import { connect } from 'react-redux'
-import { NavigationActions } from 'react-navigation'
+import { NavigationActions, SafeAreaView } from 'react-navigation'
 import { H1, CenteredView, Input, Button, BtnText } from './DeckList'
 
 
@@ -17,20 +17,20 @@ class NewCard extends React.Component {
 
     static navigationOptions = ({ navigation }) => {
         const { deck_title } = navigation.state.params;
-
         return {
-            title: deck_title
+            title: 'Add Card'
         }
     }
 
     handlePress = () => {
         const {title, question, answer} = this.state
-
+        if(title == '' || question == '' | answer == '') return alert("Error! All fields are required!") ;
         this.props.dispatch(addCard({question,answer}, title))
-        // alert(this.state.text)
-        addCardToDeck(title, {question,answer})
-
-        this.toHome()
+        addCardToDeck(title, {question,answer}).then((res) => {
+            alert(res)
+            this.toHome()
+        })
+        this.setState({answer: '', question: ''})
     }
 
     componentDidMount() {
@@ -48,28 +48,28 @@ class NewCard extends React.Component {
 
     render(){
         return (
-            <CenteredView>
-                <H1>
-                    New Card
-                </H1>
-                <View style={styles.container}>
-                    <Input placeholder="Question?" 
-                    onChangeText={(question) => this.setState({question})}
-                    style={{ marginBottom: 20 }}
-                    value={this.state.question}
-                    />
-                    <Input placeholder="Answer" 
-                    onChangeText={(answer) => this.setState({answer})}
-                    style={{ marginBottom: 20 }}
-                    value={this.state.answer}
-                    />
-                    <Button onPress={this.handlePress}>
-                        <BtnText>
-                            Submit
-                        </BtnText>
-                    </Button>
-                </View>
-            </CenteredView>
+            <KeyboardAvoidingView>
+                <CenteredView>
+                    <H1>
+                        New Card
+                    </H1>
+                        <Input placeholder="Question?" 
+                        onChangeText={(question) => this.setState({question})}
+                        style={{ marginBottom: 20 }}
+                        value={this.state.question}
+                        />
+                        <Input placeholder="Answer" 
+                        onChangeText={(answer) => this.setState({answer})}
+                        style={{ marginBottom: 20 }}
+                        value={this.state.answer}
+                        />
+                        <Button onPress={this.handlePress}>
+                            <BtnText>
+                                Submit
+                            </BtnText>
+                        </Button>
+                </CenteredView>
+            </KeyboardAvoidingView>
         )
     }
 }
@@ -77,7 +77,7 @@ class NewCard extends React.Component {
 export default connect()(NewCard)
 
 let {width} = Dimensions.get('window');
-width -= 20;
+width -= 40;
 const styles = StyleSheet.create({
     container: {
       flex: 1,

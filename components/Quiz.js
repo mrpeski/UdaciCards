@@ -7,9 +7,8 @@ import {
     Animated,
     ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-navigation'
-import FlipCard from 'react-native-flip-card'
-import { getDeck } from '../utils/DB'
 import { connect } from 'react-redux'
+import { setLocalNotification, clearLocalNotification } from '../utils/helpers'
 
 
 
@@ -19,28 +18,29 @@ class Quiz extends React.Component {
         title: '',
         fadeIn: new Animated.Value(0),
         fadeOut: new Animated.Value(1),
+        questions: [],
+        answers: [],
+        next: 0,
     }
 
     static navigationOptions = ({ navigation }) => {
-        const { deck_title } = navigation.state.params;
         return {
-            title: deck_title
+            title: 'Quiz'
         }
     }
 
     componentDidMount() {
-        let { deck_title } = this.props.navigation.state.params;
-
-        this.setState({
-            title: deck_title
-        })
-        // Animated.timing(
-        //     this.state.fadeIn,
-        //     {
-        //         toValue: 1,
-        //         duration: 10000,
-        //     }
-        // ).start();
+        let { navigation } = this.props;
+        let deck_title = navigation.getParam('deck_title')
+        let answer = navigation.getParam('answer', null)
+        let {questions} = this.props.store[deck_title] ? this.props.store[deck_title] : [];
+        let next = navigation.getParam('question_index', 0)
+        this.setState((prevState) => ({
+            title: deck_title,
+            questions,
+            next: next,
+            answers: prevState.answers.push(answer)
+        }));
     }
     
     handleTransform = () => {
@@ -50,23 +50,48 @@ class Quiz extends React.Component {
         });
     }
 
-    render(){
-        const {navigate} = this.props.navigation;
-        const { deck_title } = this.props.navigation.state.params;
+    handleCorrect = () => {
+        let {next,questions} = this.state;
+        this.props.navigation.push('Quiz', {
+            question_index: next < questions.length ? next + 1 : 0,
+            deck_title: this.state.title,
+            answer: 1
+          })
+        
+        clearLocalNotification().then(setLocalNotification)
+    }
 
-        let { fadeOut, fadeIn } = this.state;
+    handleInCorrect = () => {
+        let {next,questions} = this.state;
+        this.props.navigation.push('Quiz', {
+            question_index: next < questions.length - 1 ? next + 1 : 0,
+            deck_title: this.state.title,
+            answer: 0
+          })
+        // console.log(this.state)
+        clearLocalNotification().then(setLocalNotification)
+    }
+
+    render(){
+        const {navigation} = this.props;
+        const question_index = this.state.next;
+        let deck_title = navigation.getParam('deck_title');
+        let { fadeOut, fadeIn, next } = this.state;
         let {questions} = this.props.store[deck_title] ? this.props.store[deck_title] : [];
+
+        
         if(!questions) {
             return <View>
                 <Text style={{ fontSize: 16, alignSelf:'center'}}>Sorry, you cannot quiz on this deck. There are no cards in the deck.</Text>
             </View>
         }
         questions = questions ? questions : [];
-        return (
+        let item = questions[question_index];
+         return (
             <ScrollView>
                 <SafeAreaView>
-                    { questions.map((item, index) => (
-                        <View key={index}>
+                        <View>
+                            <Text>{next+1}/{questions.length}</Text>
                             <View style={{ margin: 30, position: 'relative', height: 200, backgroundColor: 'white'}} >
                                 <Animated.View style={{
                                 position: 'absolute',opacity: fadeOut,
@@ -74,10 +99,10 @@ class Quiz extends React.Component {
                                     inputRange: [0, 1],
                                     outputRange: ['0deg', '180deg'] 
                                     })}
-                                ]}}>
+                                ]}}>`
                                     <View style={{ }}>
                                         <Text style={{ textAlign: 'center', fontSize: 24, justifyContent: "center"}}>
-                                            {item.question}
+                                            {!!item ? item.question : '' }
                                         </Text>
                                     </View>
                                 </Animated.View>
@@ -90,7 +115,7 @@ class Quiz extends React.Component {
                                     })}
                                 ]}}>
                                     <Text style={{ textAlign:'center', fontSize: 24}}>
-                                        {item.answer}
+                                        {!!item ? item.answer : ''}
                                     </Text>
                                 </Animated.View>
                             </View>
@@ -99,19 +124,18 @@ class Quiz extends React.Component {
                                 <Text onPress={this.handleTransform} style={{ textAlign: 'center'}}>
                                     Show Answer
                                 </Text>
-                                <TouchableOpacity style={[styles.btn, styles.btnSec]} onPress={() => navigate('NewDeck')}>
+                                <TouchableOpacity style={[styles.btn, styles.btnSec]} onPress={this.handleCorrect}>
                                     <Text style={styles.btnText}>
-                                        Yes
+                                        Correct
                                     </Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.btn} underlayColor="#4c32aa" onPress={() => navigate('Quiz')}>
+                                <TouchableOpacity style={styles.btn} underlayColor="#4c32aa" onPress={this.handleInCorrect}>
                                     <Text style={styles.btnText}>
-                                        No
+                                        Incorrect
                                     </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    ))}
                 </SafeAreaView>
             </ScrollView>
         )
@@ -147,29 +171,19 @@ const styles = StyleSheet.create({
         backgroundColor: "transparent",
         width: 300,
         height: 200,
-        // perspective: 1000,
       },
     flipCardInner: {
         position: "relative",
         width: "100%",
         height: "100%",
-        // textAlign: "center",
-        // transition: "transform 0.8s",
-        // transformStyle: "preserve-3d",
       },
       
-    //   .flip-card:hover .flip-card-inner {
-    //     transform: rotateY(180deg);
-    //   }
-      
-      /* Position the front and back side */
       flipCardFront: {
         position: "absolute",
         width: "100%",
         height: "100%",
         backfaceVisibility: "hidden",
         backgroundColor: "#bbb",
-        // color: "black",
       },
       flipCardBack: {
         position: "absolute",
@@ -177,7 +191,6 @@ const styles = StyleSheet.create({
         height: "100%",
         backfaceVisibility: "hidden",
         backgroundColor: "dodgerblue",
-        // color: "white",
         transform: [{
             rotateY: "180deg"
         }]

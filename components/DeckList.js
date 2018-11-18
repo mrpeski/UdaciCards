@@ -1,7 +1,8 @@
 import React from 'react'
-import { View, Text,TouchableOpacity, StyleSheet } from 'react-native'
+import { Text,ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-navigation'
-import { _initData } from '../utils/DB'
+import { getDecks, _retrieveData } from '../utils/DB'
+import { addDecks } from '../store/actions'
 import { connect } from 'react-redux'
 import styled from 'styled-components/native'
 
@@ -46,22 +47,24 @@ const Touch = styled.TouchableOpacity`
 `
 
 export const H1 = styled.Text`
-    font-size: 36px; font-weight: 600
+    font-size: 36px; font-weight: 600;
+    margin-bottom: 40px;
 `
 
 class DeckList extends React.Component {
 
     state = {}
     
-
     componentDidMount() {
-        const store = this.props.store
-        this.setState(...store)
-        // set initial data
-        _initData(store)
+        const {dispatch} = this.props;
+        _retrieveData();
+        getDecks().then((decks) => {
+            dispatch(addDecks(decks))
+        })
     }
+
     render(){
-        console.log('store', this.props.store)
+        // console.log('store', this.props.store)
 
         const {navigate} = this.props.navigation;
         const decks = this.props.store
@@ -81,20 +84,22 @@ class DeckList extends React.Component {
                  ));
         }
         return (
-            <SafeAreaView>
-            {(UI) ? 
-            <CenteredView>
-                <H1>
-                    Home
-                </H1>
-                <Text style={{ fontSize: 18, fontWeight: "400",lineHeight: 30, padding: 10}}>
-                    Welcome to Mobile 📱 flash card. Add flash cards to each deck,
-                    create new decks and quiz 😩 yourself on each deck. 
-                    Happy quizing 😊
-                </Text>
-            {UI}
-            </CenteredView> : null}
-            </SafeAreaView>
+            <ScrollView>
+                <SafeAreaView>
+                {(UI) ? 
+                <CenteredView>
+                    <H1>
+                        Home
+                    </H1>
+                    <Text style={{ fontSize: 18, fontWeight: "400",lineHeight: 30, padding: 10}}>
+                        Welcome to Mobile 📱 flash card. Add flash cards to each deck,
+                        create new decks and quiz 😩 yourself on each deck. 
+                        Happy quizing 😊
+                    </Text>
+                {UI}
+                </CenteredView> : null}
+                </SafeAreaView>
+            </ScrollView>
         )
     }
 }

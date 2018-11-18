@@ -1,10 +1,10 @@
 import React from 'react'
-import {View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native'
+import { Text, TouchableOpacity, StyleSheet} from 'react-native'
 import { getDeck, deleteDeck } from '../utils/DB'
-// import { deleteDeck  as delAction} from '../store/actions'
 import { NavigationActions, withNavigation } from 'react-navigation'
 import { connect } from 'react-redux'
-import { H1, CenteredView, Input, Button, BtnText } from './DeckList'
+import { H1, CenteredView, Button, BtnText } from './DeckList'
+import { deleteDeck as delAction } from '../store/actions'
 
 
 class Deck extends React.Component {
@@ -22,17 +22,16 @@ class Deck extends React.Component {
 
     toHome = () => {
         this.props.navigation.dispatch(NavigationActions.back({
-            key: 'Deck'
+            key: 'DeckList'
         }))
     }
 
     handleDeckDelete = () => {
+        const { dispatch } = this.props;
         const { deck_id } = this.props.navigation.state.params;
-        const { navigate } = this.props.navigation;
+        
+        dispatch(delAction(deck_id))
 
-        // this.props.dispatch(deleteDeck(deck_id))
-        // this.toHome()
-        // this.props.navigation.dispatch(NavigationActions.navigate('NewDeck'))
         deleteDeck(deck_id).then((res) => {
             alert(res)
             this.toHome()
@@ -45,14 +44,8 @@ class Deck extends React.Component {
         this.setState({
             ...this.props.store[deck_id]
         })
-        // getDeck(deck_id).then((data) => {
-        //     this.setState({
-        //         ...data
-        //     })
-        // })
     }
     render() {
-        // const {width, height} = Dimensions.get('window');
         const { navigate } = this.props.navigation;
         const { deck_id } = this.props.navigation.state.params;
         const {title, questions} = this.state
@@ -78,20 +71,13 @@ class Deck extends React.Component {
                     Add Card
                 </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btn} underlayColor="#4c32aa" onPress={this.handleDeckDelete}>
-                <Text style={styles.btnText}>
-                    Delete Deck
-                </Text>
-            </TouchableOpacity>
+
+            <Text onPress={this.handleDeckDelete} style={{ textAlign: 'center'}}>
+                Delete Deck
+            </Text>
         </CenteredView>);
     }
 }
-
-// function mapStateToProps(state) {
-//     return {
-//         store: state
-//     }
-// }
 
 function mapStateToProps(state) {
     return {
@@ -100,7 +86,6 @@ function mapStateToProps(state) {
   }
   
 export default connect(mapStateToProps)(withNavigation(Deck))
-// export default connect()(Deck)
 
 const styles = StyleSheet.create({
     btnSec: {

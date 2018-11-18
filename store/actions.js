@@ -1,6 +1,6 @@
 export const ADD_CARD = 'ADD_CARD'
 export const CREATE_DECK = 'CREATE_DECK'
-export const FETCH_DECKS = 'FETCH_DECKS'
+export const ADD_DECKS = 'ADD_DECKS'
 export const FETCH_DECK = 'FETCH_DECK'
 export const DELETE_DECK = 'DELETE_DECK'
 
@@ -17,6 +17,13 @@ export function fetchDeck(deck) {
     return {
         type: FETCH_DECK,
         deck
+    }
+}
+
+export function addDecks(decks) {
+    return {
+        type: ADD_DECKS,
+        decks    
     }
 }
 

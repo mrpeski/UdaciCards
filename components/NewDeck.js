@@ -1,8 +1,8 @@
 import React from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import { View, Text, KeyboardAvoidingView, StyleSheet, Dimensions } from 'react-native'
 import { connect } from 'react-redux'
 import {createDeck} from '../store/actions'
-import { saveDeckTitle } from '../utils/DB'
+import { _storeData } from '../utils/DB'
 import { NavigationActions, withNavigation } from 'react-navigation'
 import { H1, CenteredView, Input, Button, BtnText } from './DeckList'
 
@@ -10,13 +10,19 @@ import { H1, CenteredView, Input, Button, BtnText } from './DeckList'
 class NewDeck extends React.Component {
 
     state = {
-        text: ''
+        title: '',
+        questions: []
     }
 
     handlePress = () => {
-        this.props.dispatch(createDeck(this.state.text))
-        saveDeckTitle(this.state.text)
-        this.toHome()
+        const {title} = this.state;
+        if(title == '') return alert("Error! All fields are required!") ;
+        this.props.dispatch(createDeck(this.state.title))
+        this.setState({title: ''})
+        _storeData(this.state.title,this.state).then((res) => {
+            alert(res)
+            this.toHome()
+        })
     }
 
     toHome = () => {
@@ -26,21 +32,20 @@ class NewDeck extends React.Component {
     }
 
     render(){
-        console.log(this.props)
         return (
+            <KeyboardAvoidingView>
             <CenteredView>
                 <H1>
                     New Deck
                 </H1>
                 
-                <View style={styles.container}>
                 <Text style={{ fontSize: 18, fontWeight: "400",lineHeight: 30, padding: 10}}>
                     Create new decks and quiz 😩 yourself on each deck. 
                 </Text>
                 <View style={{padding: 10}}>
                     <Input placeholder="Deck Title" style={{}}
-                    onChangeText={(text) => this.setState({text})}
-                    value={this.state.text}
+                    onChangeText={(title) => this.setState({title})}
+                    value={this.state.title}
                     />
                     <Button onPress={this.handlePress}>
                         <BtnText>
@@ -48,8 +53,8 @@ class NewDeck extends React.Component {
                         </BtnText>
                     </Button>
                 </View>
-                </View>
             </CenteredView>
+            </KeyboardAvoidingView>
         )
     }
 }

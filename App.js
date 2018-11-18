@@ -9,7 +9,7 @@ import { Constants } from 'expo';
 import NewCard from './components/NewCard';
 import Quiz from './components/Quiz';
 import DeckList from './components/DeckList';
-import { setLocalNotification, _initData } from './utils/DB'
+import { setLocalNotification } from './utils/helpers'
 import { createStore } from 'redux'
 import { Provider } from 'react-redux'
 import {reducer} from './store/reducers'
@@ -76,7 +76,7 @@ const store = createStore(reducer, middlewares);
 export default class App extends React.Component {
 
   componentDidMount() {
-    // setLocalNotification()
+    setLocalNotification()
     // _initData()
   }
   render() {
