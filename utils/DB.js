@@ -39,7 +39,7 @@ saveDeckTitle = async (title) => {
         if (value != null) {
             let decks = JSON.parse(value);
             // let _keys = Object.keys(decks);
-            decks[title] = {title, question:[]}
+            decks[title] = {title, question:[], score: null}
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(decks))
         }
     }

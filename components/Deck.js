@@ -1,10 +1,10 @@
 import React from 'react'
 import { Text, TouchableOpacity, StyleSheet} from 'react-native'
-import { getDeck, deleteDeck } from '../utils/DB'
+import { deleteDeck } from '../utils/DB'
 import { NavigationActions, withNavigation } from 'react-navigation'
 import { connect } from 'react-redux'
 import { H1, CenteredView, Button, BtnText } from './DeckList'
-import { deleteDeck as delAction } from '../store/actions'
+import { deleteDeck as delAction, start_quiz } from '../store/actions'
 
 
 class Deck extends React.Component {
@@ -38,6 +38,13 @@ class Deck extends React.Component {
         })
     }
 
+    startQuiz = () => {
+        const { deck_id } = this.props.navigation.state.params;
+        const { navigation, dispatch } = this.props;
+        dispatch(start_quiz(deck_id))
+        navigation.navigate('Quiz', {deck_title: deck_id})
+    }
+
     componentDidMount() {
        
         const { deck_id } = this.props.navigation.state.params;
@@ -60,7 +67,7 @@ class Deck extends React.Component {
                     Welcome to the {title} deck. There are {ques} in this deck.
                 </Text>
 
-            <Button underlayColor="#4c32aa" onPress={() => navigate('Quiz', {deck_title: deck_id})}>
+            <Button underlayColor="#4c32aa" onPress={this.startQuiz}>
                 <BtnText>
                     Start Quiz
                 </BtnText>

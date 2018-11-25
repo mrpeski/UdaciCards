@@ -9,6 +9,7 @@ import { Constants } from 'expo';
 import NewCard from './components/NewCard';
 import Quiz from './components/Quiz';
 import DeckList from './components/DeckList';
+import Result from './components/Result';
 import { setLocalNotification } from './utils/helpers'
 import { createStore } from 'redux'
 import { Provider } from 'react-redux'
@@ -67,6 +68,9 @@ const MainNavigator = createStackNavigator({
   },
   Quiz: {
     screen: Quiz,
+  },
+  Result: {
+    screen: Result,
   }
 })
 

@@ -18,16 +18,19 @@ class NewDeck extends React.Component {
         const {title} = this.state;
         if(title == '') return alert("Error! All fields are required!") ;
         this.props.dispatch(createDeck(this.state.title))
-        this.setState({title: ''})
         _storeData(this.state.title,this.state).then((res) => {
             alert(res)
-            this.toHome()
+            this.toDeck()
+            this.setState({title: ''})
         })
     }
 
-    toHome = () => {
+    toDeck = (res) => {
+        let {title} = this.state;
+        console.log(title)
         this.props.navigation.dispatch(NavigationActions.navigate({
-            routeName: 'DeckList',
+            routeName: 'Deck',
+            params: {deck_id: title},
         }))
     }
 

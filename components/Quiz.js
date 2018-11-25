@@ -8,9 +8,7 @@ import {
     ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-navigation'
 import { connect } from 'react-redux'
-import { setLocalNotification, clearLocalNotification } from '../utils/helpers'
-
-
+import { score } from '../store/actions'
 
 class Quiz extends React.Component {
 
@@ -35,6 +33,7 @@ class Quiz extends React.Component {
         let answer = navigation.getParam('answer', null)
         let {questions} = this.props.store[deck_title] ? this.props.store[deck_title] : [];
         let next = navigation.getParam('question_index', 0)
+        
         this.setState((prevState) => ({
             title: deck_title,
             questions,
@@ -49,27 +48,34 @@ class Quiz extends React.Component {
             Animated.timing(this.state.fadeIn,{toValue: 1,duration: 500,}).start();
         });
     }
+    handleReTransform = () => {
+        let fa = Animated.timing(this.state.fadeOut,{toValue: 0,duration: 1000,});
+        fa.start(({finished}) => {
+            Animated.timing(this.state.fadeIn,{toValue: 0,duration: 500,}).start();
+        });
+    }
 
     handleCorrect = () => {
         let {next,questions} = this.state;
+        let { dispatch } = this.props;
+        const deck_title = this.state.title;
+
+        dispatch(score(deck_title))
+
         this.props.navigation.push('Quiz', {
             question_index: next < questions.length ? next + 1 : 0,
             deck_title: this.state.title,
             answer: 1
-          })
-        
-        clearLocalNotification().then(setLocalNotification)
+            })
     }
 
     handleInCorrect = () => {
         let {next,questions} = this.state;
         this.props.navigation.push('Quiz', {
-            question_index: next < questions.length - 1 ? next + 1 : 0,
+            question_index: next < questions.length ? next + 1 : 0,
             deck_title: this.state.title,
             answer: 0
           })
-        // console.log(this.state)
-        clearLocalNotification().then(setLocalNotification)
     }
 
     render(){
@@ -78,16 +84,29 @@ class Quiz extends React.Component {
         let deck_title = navigation.getParam('deck_title');
         let { fadeOut, fadeIn, next } = this.state;
         let {questions} = this.props.store[deck_title] ? this.props.store[deck_title] : [];
-
         
-        if(!questions) {
+        if(questions.length===0) {
             return <View>
                 <Text style={{ fontSize: 16, alignSelf:'center'}}>Sorry, you cannot quiz on this deck. There are no cards in the deck.</Text>
+                <TouchableOpacity style={[styles.btn, styles.btnSec]} onPress={() => navigation.navigate('NewDeck', {deck_title: deck_title})}>
+                    <Text style={styles.btnText}>
+                        Add Card
+                    </Text>
+                </TouchableOpacity>
             </View>
         }
         questions = questions ? questions : [];
         let item = questions[question_index];
-         return (
+
+        if(next > questions.length - 1) {
+
+            navigation.navigate('Result', {
+                deck_title: deck_title
+            })
+
+            return null;
+        }
+        return (
             <ScrollView>
                 <SafeAreaView>
                         <View>
@@ -99,16 +118,14 @@ class Quiz extends React.Component {
                                     inputRange: [0, 1],
                                     outputRange: ['0deg', '180deg'] 
                                     })}
-                                ]}}>`
-                                    <View style={{ }}>
+                                ]}}>
+                                    <View>
                                         <Text style={{ textAlign: 'center', fontSize: 24, justifyContent: "center"}}>
                                             {!!item ? item.question : '' }
                                         </Text>
                                     </View>
                                 </Animated.View>
-
-                                <Animated.View style={{opacity: fadeIn, 
-                                transform: [{
+                                <Animated.View style={{opacity: fadeIn,transform: [{
                                     rotateY: this.state.fadeIn.interpolate({
                                     inputRange: [0, 1],
                                     outputRange: ['180deg', '0deg'] 
@@ -144,7 +161,7 @@ class Quiz extends React.Component {
 
 function mapStateToProps(state){
     return {
-        store: state
+        store: state,
     }
 }
 
